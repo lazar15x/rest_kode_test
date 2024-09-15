@@ -50,6 +50,7 @@ var usersToken = map[string]string{
 	"yuuuuui5756756": "test",
 }
 
+// Services--------
 func (d *mockDB) GetUserLoginDetails(token string) string {
 	username, ok := usersToken[token]
 	fmt.Println(username)
@@ -60,7 +61,6 @@ func (d *mockDB) GetUserLoginDetails(token string) string {
 	return username
 }
 
-// Services--------
 func (d *mockDB) GetNotes(token string) []NoteDetails {
 	username := usersToken[token]
 	clientData, exists := notes[username]
@@ -77,11 +77,11 @@ func (d *mockDB) CreateNotes(token string, newNote NoteDetails) *NoteDetails {
 	if _, exists := notes[username]; exists {
 		notes[username] = append(notes[username], newNote)
 	}
-	
+
 	return &newNote
 }
 
-func (d *mockDB) Authenticate(username, password string) (string, error) {
+func (d *mockDB) Authentication(username, password string) (string, error) {
 	var err error
 	user, ok := mockUsers[username]
 	if !ok || user.Password != password {

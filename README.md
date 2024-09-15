@@ -12,3 +12,9 @@ go run ./cmd/api
 docker build -t kode_test .
 docker run -p 8080:8080 kode_test
 ```
+
+Для проверки API запускаем проект и в консоли пишем:
+
+```sh
+sh api_requests.sh
+```

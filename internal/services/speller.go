@@ -9,13 +9,13 @@ import (
 )
 
 type SpellCheckResponse struct {
-	Code   int      `json:"code"`
-	Pos    int      `json:"pos"`
-	Row    int      `json:"row"`
-	Col    int      `json:"col"`
-	Len    int      `json:"len"`
-	Word   string   `json:"word"`
-	S      []string `json:"s"`
+	Code int      `json:"code"`
+	Pos  int      `json:"pos"`
+	Row  int      `json:"row"`
+	Col  int      `json:"col"`
+	Len  int      `json:"len"`
+	Word string   `json:"word"`
+	S    []string `json:"s"`
 }
 
 var baseURL string = "https://speller.yandex.net/services/spellservice.json/checkText"
@@ -28,14 +28,14 @@ func SpellCheck(description string) (string, error) {
 
 	res, err := http.Get(fullURL)
 	if err != nil {
-		return description, fmt.Errorf("error sending request to external service: %w", err)
+		return description, fmt.Errorf("ошибка отправки запроса: %w", err)
 	}
 	defer res.Body.Close()
 
 	var spellCheckResults []SpellCheckResponse
-  if err := json.NewDecoder(res.Body).Decode(&spellCheckResults); err != nil {
-		return description, fmt.Errorf("error decoding response: %w", err)
-  }
+	if err := json.NewDecoder(res.Body).Decode(&spellCheckResults); err != nil {
+		return description, fmt.Errorf("ошибка декодирвоания ответа: %w", err)
+	}
 
 	correctedDescription := applyCorrections(description, spellCheckResults)
 	return correctedDescription, nil

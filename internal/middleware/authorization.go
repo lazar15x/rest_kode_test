@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/lazar15x/rest_kode_test/api"
@@ -9,31 +8,27 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var  ErrUnauthorized = errors.New("unauthorized access")
 
-func Authorization(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var token = r.Header.Get("Authorization")
-		var err error
-		if token == "" {
-			log.Error(ErrUnauthorized )
-			api.RequestErrorHandler(w, ErrUnauthorized )
-			return
-		}
 
-		var db *tools.DatabaseInterface
-		if db, err = tools.NewDatabase(); err != nil {
-			api.InternalErrorHandler(w)
-			return
-		}
+func Authorization(s tools.DatabaseInterface) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var token = r.Header.Get("Authorization")
 
-		var username string = (*db).GetUserLoginDetails(token)
-		if username == "" {
-			log.Error(ErrUnauthorized )
-			api.RequestErrorHandler(w, ErrUnauthorized )
-			return
-		}
+			if token == "" {
+				log.Error(api.ErrUnauthorized)
+				api.RequestErrorHandler(w, api.ErrUnauthorized)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			var username string = s.GetUserLoginDetails(token)
+			if username == "" {
+				log.Error(api.ErrUnauthorized)
+				api.RequestErrorHandler(w, api.ErrUnauthorized)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

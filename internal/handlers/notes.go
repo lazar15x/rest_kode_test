@@ -10,20 +10,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Получаем список заметок
-func GetNotes(w http.ResponseWriter, r *http.Request) {
+// Получаем список заметок
+func (s *Services) GetNotes(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var db *tools.DatabaseInterface
 	var token = r.Header.Get("Authorization")
 
-	if db, err = tools.NewDatabase(); err != nil {
-		api.InternalErrorHandler(w)
-		return
-	}
-
-	userNotes := (*db).GetNotes(token)
+	userNotes := s.db.GetNotes(token)
 	response := api.NoteResponse{
-		Code: http.StatusOK,
+		Code:     http.StatusOK,
 		NoteList: userNotes,
 	}
 
@@ -34,36 +28,30 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Создаем заметку
-func CreateNotes(w http.ResponseWriter, r *http.Request) {
-	var err error
-	var db *tools.DatabaseInterface
+// Создаем заметку
+func (s *Services) CreateNotes(w http.ResponseWriter, r *http.Request) {
 	var token = r.Header.Get("Authorization")
 	var newNote tools.NoteDetails
 
-	if db, err = tools.NewDatabase(); err != nil {
-		api.InternalErrorHandler(w)
-		return
-	}
-
 	if err := json.NewDecoder(r.Body).Decode(&newNote); err != nil {
-		http.Error(w, "Не удалось декодировать JSON", http.StatusBadRequest)
+		api.RequestErrorHandler(w, err)
 		return
 	}
-  defer r.Body.Close()
-	log.Printf("Received note: %+v", newNote)
+	defer r.Body.Close()
 
+	log.Printf("Получаем заметку: %+v", newNote)
 	correctedDescription, err := services.SpellCheck(newNote.Description)
+
 	if err != nil {
 		log.Printf("Ошибка проверки слов: %v", err)
 		return
 	}
 
 	newNote.Description = correctedDescription
-	addedNote := (*db).CreateNotes(token, newNote)
-	
+	addedNote := s.db.CreateNotes(token, newNote)
+
 	if addedNote == nil {
-		http.Error(w, "Не удалось добавить заметку", http.StatusInternalServerError)
+		api.InternalErrorHandler(w)
 		return
 	}
 
@@ -74,7 +62,6 @@ func CreateNotes(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	
 	if err = json.NewEncoder(w).Encode(response); err != nil {
 		log.Error(err)
 		api.InternalErrorHandler(w)

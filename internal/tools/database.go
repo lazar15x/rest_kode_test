@@ -6,34 +6,33 @@ import (
 
 type LoginDetails struct {
 	Username string
-	Token string
+	Token    string
 }
 
 type UserDetails struct {
-	Username string
-	Password string
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type NoteDetails struct {
-	Title string
+	Title       string
 	Description string
 }
 
 type DatabaseInterface interface {
 	SetupDatabase() error
-	Authenticate(username, password string) (string, error)
+	Authentication(username, password string) (string, error)
 	GetUserLoginDetails(username string) string
 	GetNotes(username string) []NoteDetails
 	CreateNotes(token string, newNote NoteDetails) *NoteDetails
 }
 
-func NewDatabase() (*DatabaseInterface, error) {
-	var db DatabaseInterface = &mockDB{}
-	var err error = db.SetupDatabase()
-	if err != nil {
+func NewDatabase() (DatabaseInterface, error) {
+	var database DatabaseInterface = &mockDB{}
+	if err := database.SetupDatabase(); err != nil {
 		log.Error(err)
 		return nil, err
 	}
 
-	return &db, nil
+	return database, nil
 }
